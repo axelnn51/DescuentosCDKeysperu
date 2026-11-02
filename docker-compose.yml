@@ -5,12 +5,14 @@ services:
     build: .
     container_name: spy_rebajas_peru
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-TU_TELEGRAM_BOT_TOKEN_AQUI}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - MIN_DISCOUNT_PERCENT=${MIN_DISCOUNT_PERCENT:-75}
+      - SCAN_INTERVAL_MINUTES=${SCAN_INTERVAL_MINUTES:-15}
+      - MAX_ITEMS_PER_STORE=${MAX_ITEMS_PER_STORE:-50}
+      - ENABLED_STORES=${ENABLED_STORES:-plazavea,oechsle,metro,wong,promart,coolbox,footloose,triathlon,casaideas,sony,shopstar,lacuracao,efe,hiraoka,juntoz,ripley,falabella}
       - PYTHONUNBUFFERED=1
       - TZ=America/Lima
     volumes:
-      # Persistencia de la base de datos de ofertas vistas
       - ./data:/app/data
-
