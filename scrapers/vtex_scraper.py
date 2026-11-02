@@ -17,6 +17,7 @@ VTEX_STORES_CATALOG = {
     "triathlon": {"name": "Triathlon Sport", "base_url": "https://www.triathlon.com.pe"},
     "casaideas": {"name": "Casaideas", "base_url": "https://www.casaideas.com.pe"},
     "sony": {"name": "Sony Store Perú", "base_url": "https://store.sony.com.pe"},
+    "shopstar": {"name": "Shopstar", "base_url": "https://www.shopstar.pe"},
 }
 
 class VTEXScraper(BaseScraper):
@@ -102,3 +103,4 @@ class VTEXScraper(BaseScraper):
             pass
 
         return deals
+

@@ -17,3 +17,4 @@ class Deal:
     @property
     def savings(self) -> float:
         return round(self.original_price - self.discount_price, 2)
+

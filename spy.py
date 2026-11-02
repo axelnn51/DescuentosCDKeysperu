@@ -103,6 +103,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Buscar ofertas e imprimir en consola sin enviar a Telegram")
     parser.add_argument("--daemon", action="store_true", help="Ejecutar en bucle continuo de monitoreo")
     parser.add_argument("--test-telegram", action="store_true", help="Probar el token y chat ID de Telegram")
+    parser.add_argument("--get-chat-id", action="store_true", help="Detectar automáticamente tu chat_id desde Telegram")
     parser.add_argument("--stats", action="store_true", help="Mostrar estadísticas de ofertas registradas")
     parser.add_argument("--min-discount", type=float, default=MIN_DISCOUNT_PERCENT, help="Porcentaje mínimo de descuento (ej: 75)")
     parser.add_argument("--max-items", type=int, default=MAX_ITEMS_PER_STORE, help="Máximo de productos por tienda")
@@ -110,6 +111,30 @@ def main():
     parser.add_argument("--store", type=str, default=None, help="Escanear solo una tienda específica (ej: oechsle, plazavea)")
 
     args = parser.parse_args()
+
+    if args.get_chat_id:
+        notifier = TelegramNotifier()
+        cid, msg = notifier.auto_detect_chat_id()
+        print(f"[{'EXITO' if cid else 'INFO'}] {msg}")
+        if cid:
+            # Actualizar .env automáticamente
+            env_file = "c:/Users/axeln/OneDrive/Desktop/Proyectos/13. SPY DE REBAJAS/.env"
+            try:
+                with open(".env", "r", encoding="utf-8") as f:
+                    content = f.read()
+                if "TELEGRAM_CHAT_ID=" in content:
+                    lines = []
+                    for line in content.splitlines():
+                        if line.startswith("TELEGRAM_CHAT_ID="):
+                            lines.append(f"TELEGRAM_CHAT_ID={cid}")
+                        else:
+                            lines.append(line)
+                    with open(".env", "w", encoding="utf-8") as f:
+                        f.write("\n".join(lines) + "\n")
+                    print(f"💾 Guardado TELEGRAM_CHAT_ID={cid} en tu archivo .env automáticamente!")
+            except Exception as e:
+                print(f"⚠️ Guarda este ID manualmente en tu .env: TELEGRAM_CHAT_ID={cid}")
+        sys.exit(0 if cid else 1)
 
     if args.test_telegram:
         notifier = TelegramNotifier()

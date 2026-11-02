@@ -43,7 +43,11 @@ if not ENABLED_STORES:
     ENABLED_STORES = [
         "plazavea", "oechsle", "metro", "wong", "promart",
         "coolbox", "footloose", "triathlon", "casaideas", "sony",
+        "shopstar", "lacuracao", "efe", "hiraoka", "juntoz",
         "ripley", "falabella"
     ]
 
-DB_PATH = Path(__file__).resolve().parent / "deals.db"
+# Ruta de base de datos persistente (compatible con Docker / Portainer y Local)
+DATA_DIR = Path("/app/data") if Path("/app/data").is_dir() else (Path(__file__).resolve().parent / "data")
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DB_PATH = DATA_DIR / "deals.db"

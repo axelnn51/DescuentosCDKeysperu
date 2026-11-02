@@ -1,31 +1,28 @@
-# 📍 ACTIVE_CONTEXT: Spy de Rebajas Perú (Telegram Bot)
-> Última Actualización: 2026-11-02 | Versión: v1.0.0 | Estado: Operativo (Listo para vincular Telegram)
+# 📍 ACTIVE_CONTEXT: Spy de Rebajas Perú (Telegram Bot + Portainer)
+> Última Actualización: 2026-11-02 | Versión: v1.1.0 | Estado: Operativo & Dockerizado
 
 ## 1. 🚦 Estado Actual Inmediato
-- Sistema de escaneo multi-tienda funcionando con detección en vivo de ofertas con mínimo 75% de descuento (hasta 99% OFF).
-- Motor de alertas Telegram con formateo HTML, soporte para envío de fotos del producto, prevención de duplicados vía SQLite y control de tasa (rate limiting).
-- Tiendas integradas y probadas en vivo: Plaza Vea, Metro, Wong, Oechsle, Promart, Coolbox, Footloose, Triathlon Sport, Casaideas, Sony Store, Ripley y Falabella.
-- Comandos de ejecución:
-  - `python spy.py --dry-run` : Escaneo de prueba en consola sin enviar a Telegram.
-  - `python spy.py --scan-once` : Escaneo en vivo y envío directo a Telegram.
-  - `python spy.py --daemon` : Monitoreo continuo 24/7 cada X minutos.
-  - `python spy.py --test-telegram` : Prueba de conexión con el bot de Telegram.
+- 17 Tiendas y Marketplaces integrados: Plaza Vea, Metro, Wong, Oechsle, Promart, Coolbox, Footloose, Triathlon, Casaideas, Sony Store, Shopstar, La Curacao, Tiendas Efe, Hiraoka, Juntoz, Ripley y Falabella.
+- Token de Telegram del bot `@DsctCDKeysPerubot` configurado (`1234567890:...`).
+- Soporte Dockerfile & docker-compose.yml con volumen persistente en `/app/data` para despliegue directo en Portainer Stacks.
+- Detección automática de chat ID vía `python spy.py --get-chat-id`.
 
 ## 2. 🧠 Base de Conocimiento de Errores (Caminos Resueltos vs Descartados)
 ### ✅ Errores Resueltos Definitivamente (No volver a diagnosticar)
-- **VTEX HTTP 206 Partial Content**: Las consultas por rango de VTEX devuelven código 206 en lugar de 200. Manejado aceptando códigos 200 y 206.
-- **Compresión GZIP en Sony Store**: Sony devuelve respuestas comprimidas `gzip`. Manejado con descompresión transparente de `gzip`.
-- **UnicodeEncodeError en Windows (cp1252)**: PowerShell en Windows falla al imprimir caracteres UTF-8 como emojis. Resuelto configurando `sys.stdout.reconfigure(encoding="utf-8")`.
-- **Deduplicación de ofertas**: Previene spam repetitivo en Telegram guardando cada oferta en `deals.db` (SQLite) y solo re-notificando si el precio baja aún más.
+- **VTEX HTTP 206 Partial Content**: Manejado para Shopstar, Plaza Vea, Oechsle, Promart, etc.
+- **Tiendas Magento 2 (La Curacao, Efe, Hiraoka)**: Implementado `MagentoScraper` con parseo de `.product-item-info`, `.old-price` y `.special-price`.
+- **Juntoz (Next.js/Tailwind SPA)**: Implementado `JuntozScraper` extrayendo tarjetas `/p/` y precios `S/. X`.
+- **Persistencia en Docker / Portainer**: La base SQLite reside en `data/deals.db` mapeada al volumen `/app/data`.
 
 ### ❌ Caminos Técnicos Fallidos / Descartados (Prohibido reintentar)
-- **Llamadas estándar con `requests` a Falabella/Ripley**: Bloqueadas con 403 por protecciones Cloudflare/TLS fingerprinting. Descartado `requests` puro; se utiliza `curl_cffi` con impersonación de Chrome (`chrome124`) y extracción de `__NEXT_DATA__`.
+- **Mercado Libre API pública no autenticada**: Bloqueada con 403 por nuevo sistema OAuth estricto; no usar llamadas directas sin token OAuth.
 
 ## 3. 📋 Tareas Pendientes y Roadmap Inmediato
-- [ ] Configurar `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env` por parte del usuario.
-- [ ] Opcional: Configurar tarea programada en Windows Task Scheduler o servicio para ejecución continua si se desea.
+- [x] Push a GitHub: `https://github.com/axelnn51/DescuentosCDKeysperu.git`
+- [ ] Iniciar chat con `@DsctCDKeysPerubot` en Telegram y correr `python spy.py --get-chat-id` (o colocar el chat_id en Portainer).
+- [ ] Desplegar Stack en Portainer.
 
 ## 4. 🔗 Referencias Rápidas y Credenciales/Variables
-- Archivo de configuración: `.env` (creado a partir de `.env.example`).
-- Base de datos local de deduplicación: `deals.db` (SQLite).
-- Punto de entrada principal: `spy.py`.
+- Bot de Telegram: `@DsctCDKeysPerubot`
+- Repositorio Remoto: `https://github.com/axelnn51/DescuentosCDKeysperu.git`
+- Configuración: `.env` / `docker-compose.yml`

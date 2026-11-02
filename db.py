@@ -83,3 +83,4 @@ def get_stats() -> List[Tuple[str, int]]:
     rows = cursor.fetchall()
     conn.close()
     return rows
+

@@ -120,3 +120,4 @@ class FalabellaScraper(BaseScraper):
                 continue
 
         return deals
+

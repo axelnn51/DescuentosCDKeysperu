@@ -12,3 +12,4 @@ class BaseScraper(ABC):
     def fetch_deals(self, min_discount: float, max_items: int) -> List[Deal]:
         """Extrae ofertas de la tienda que superen el porcentaje mínimo de descuento."""
         pass
+

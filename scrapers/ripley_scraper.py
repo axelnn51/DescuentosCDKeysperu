@@ -122,3 +122,4 @@ class RipleyScraper(BaseScraper):
                 continue
 
         return deals
+

@@ -86,6 +86,35 @@ class TelegramNotifier:
             print(f"[ERROR TELEGRAM] {e}")
             return False
 
+    def auto_detect_chat_id(self) -> Tuple[Optional[str], str]:
+        """Consulta getUpdates para detectar el chat_id del último usuario que habló con el bot."""
+        if not self.token:
+            return None, "No hay TELEGRAM_BOT_TOKEN configurado."
+        
+        url = f"{self.base_url}/getUpdates"
+        try:
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                results = data.get("result", [])
+                if not results:
+                    return None, "Aún no se detectan mensajes. Por favor abre Telegram, busca a tu bot y dale a /start"
+                
+                last_update = results[-1]
+                msg = last_update.get("message") or last_update.get("channel_post") or last_update.get("my_chat_member", {}).get("chat")
+                if isinstance(msg, dict) and "chat" in msg:
+                    chat = msg["chat"]
+                elif isinstance(msg, dict) and "id" in msg:
+                    chat = msg
+                else:
+                    return None, "No se pudo interpretar el tipo de chat en getUpdates."
+                
+                chat_id = str(chat.get("id"))
+                chat_title = chat.get("title") or chat.get("username") or chat.get("first_name", "Desconocido")
+                return chat_id, f"¡Chat detectado con éxito! Nombre: {chat_title} | ID: {chat_id}"
+        except Exception as e:
+            return None, f"Error al consultar getUpdates: {e}"
+
     def test_connection(self) -> Tuple[bool, str]:
         if not self.is_configured():
             return False, "Faltan credenciales: Por favor configura TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en el archivo .env"
