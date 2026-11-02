@@ -19,17 +19,18 @@ class TelegramNotifier:
     def format_deal_caption(self, deal: Deal) -> str:
         clean_title = html.escape(deal.title)
         
-        # Formato especial para promociones tipo 2x1 o Cupones
-        if deal.deal_type in ("2x1", "coupon", "flash"):
-            badge = "🎁 <b>¡PROMOCIÓN ESPECIAL / 2x1!</b> 🎁" if deal.deal_type == "2x1" else "🎟️ <b>¡CUPÓN EN VIVO DETECTADO!</b> 🎟️"
+        # Formato para MÍNIMO HISTÓRICO REAL
+        if deal.is_historical_low or deal.deal_type == "historical_low":
             caption = (
-                f"{badge}\n\n"
-                f"🏷️ <b>{clean_title}</b>\n\n"
-                f"🏬 <b>Fuente:</b> {deal.store}\n"
+                f"📉 <b>¡MÍNIMO HISTÓRICO CONFIRMADO!</b> 📉\n\n"
+                f"🛒 <b>{clean_title}</b>\n\n"
+                f"🏬 <b>Tienda:</b> {deal.store}\n"
+                f"💰 <b>Precio Actual:</b> <b>S/. {deal.discount_price:,.2f}</b>\n"
+                f"🏷️ <b>Precio Habitual:</b> <s>S/. {deal.original_price:,.2f}</s>\n"
+                f"💵 <b>Ahorras:</b> S/. {deal.savings:,.2f} ({deal.discount_percent:.0f}% OFF)\n"
+                f"📊 <b>Historial:</b> <b>¡El precio más bajo jamás registrado!</b>\n"
             )
-            if deal.discount_price > 0:
-                caption += f"💰 <b>Precio:</b> <b>S/. {deal.discount_price:,.2f}</b>\n"
-            caption += f"\n👉 <a href=\"{deal.url}\"><b>[ VER PROMOCIÓN / CANJEAR CUPÓN ]</b></a>"
+            caption += f"\n🔗 <a href=\"{deal.url}\"><b>[ IR A LA TIENDA Y COMPRAR ]</b></a>"
             return caption
 
         # Formato para descuentos y liquidaciones directas
@@ -58,12 +59,12 @@ class TelegramNotifier:
         if deal.image_url:
             success = self._send_photo(deal.image_url, caption)
             if success:
-                time.sleep(1.2)
+                time.sleep(1.0)
                 return True
 
         # 2. Si falla la foto o no tiene imagen, enviar mensaje de texto HTML
         success = self._send_message(caption)
-        time.sleep(1.2)
+        time.sleep(1.0)
         return success
 
     def _send_photo(self, photo_url: str, caption: str) -> bool:
@@ -137,7 +138,7 @@ class TelegramNotifier:
         test_text = (
             "🤖 <b>SPY DE REBAJAS PERÚ CONECTADO</b> 🇵🇪\n\n"
             "✅ La conexión con tu bot de Telegram es exitosa.\n"
-            "🎯 Monitoreando rebajas con mínimo <b>75% de descuento</b> y cupones/promos activas."
+            "🎯 Monitoreando rebajas originales y mínimos históricos de Perú."
         )
         ok = self._send_message(test_text)
         if ok:

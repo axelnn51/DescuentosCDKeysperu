@@ -13,8 +13,10 @@ class Deal:
     discount_percent: float
     stock: int = 1
     currency: str = "S/."
-    deal_type: str = "discount" # "discount", "coupon", "2x1", "flash"
+    deal_type: str = "discount" # "discount", "historical_low"
     description: Optional[str] = None
+    is_historical_low: bool = False
+    best_historical_price: Optional[float] = None
 
     @property
     def savings(self) -> float:

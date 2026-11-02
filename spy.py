@@ -31,14 +31,14 @@ from scrapers import get_scrapers
 from telegram_notifier import TelegramNotifier
 from filters import is_valid_deal
 
-# Límite de alertas máximas por ciclo para no saturar Telegram ni el servidor
-MAX_ALERTS_PER_CYCLE = 6
+# Límite de alertas máximas por ciclo para balancear variedad y servidor
+MAX_ALERTS_PER_CYCLE = 15
 
 def print_banner():
     print(r"""
 =============================================================
   🇵🇪  SPY DE REBAJAS PERÚ - BOT DE LIQUIDACIONES  🇵🇪
-  Filtro actual: Rebajas Relevantes con MÍNIMO 75% DE DESCUENTO
+  Filtro actual: Rebajas y Mínimos Históricos en Tiendas Perú
 =============================================================
 """)
 
@@ -49,7 +49,7 @@ def run_scan(min_discount: float, max_items: int, dry_run: bool = False, store_f
     stores_to_run = [store_filter.lower()] if store_filter else ENABLED_STORES
     scrapers = get_scrapers(stores_to_run)
 
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando escaneo en {len(scrapers)} fuentes...")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando escaneo en {len(scrapers)} fuentes oficiales...")
     print(f"🎯 Umbral de descuento: >= {min_discount}% | Modo: {'DRY RUN (Solo prueba)' if dry_run else 'EN VIVO'}\n")
 
     candidates = []
@@ -63,7 +63,6 @@ def run_scan(min_discount: float, max_items: int, dry_run: bool = False, store_f
             for deal in deals:
                 valid, reason = is_valid_deal(deal)
                 if not valid:
-                    # Descartado por chatarra o inflado
                     continue
 
                 if should_notify(deal):
@@ -71,16 +70,19 @@ def run_scan(min_discount: float, max_items: int, dry_run: bool = False, store_f
         except Exception as e:
             print(f"-> Error: {e}")
 
-    # Ordenar candidatos: primero cupones/promos, y luego los de mayor ahorro real en soles
-    candidates.sort(key=lambda d: (1 if d.deal_type in ("coupon", "2x1") else 0, d.savings), reverse=True)
+    # Ordenar candidatos: primero MÍNIMOS HISTÓRICOS, luego mayor ahorro en dinero real
+    candidates.sort(key=lambda d: (1 if d.is_historical_low else 0, d.savings), reverse=True)
 
     print(f"\n📊 Total de ofertas relevantes no notificadas: {len(candidates)}")
     selected_deals = candidates[:MAX_ALERTS_PER_CYCLE]
 
     total_notified = 0
     for deal in selected_deals:
-        tipo = f"[{deal.deal_type.upper()}]" if deal.deal_type != "discount" else f"[{deal.discount_percent:.0f}% OFF]"
-        print(f"   🔥 {tipo} {deal.store} | S/. {deal.discount_price:,.2f} (Antes: S/. {deal.original_price:,.2f})")
+        if deal.is_historical_low or deal.deal_type == "historical_low":
+            tipo = "📉 [MÍNIMO HISTÓRICO]"
+        else:
+            tipo = f"🔥 [{deal.discount_percent:.0f}% OFF]"
+        print(f"   {tipo} {deal.store} | S/. {deal.discount_price:,.2f} (Antes: S/. {deal.original_price:,.2f})")
         print(f"      {deal.title[:65]}")
         print(f"      🔗 {deal.url}")
 

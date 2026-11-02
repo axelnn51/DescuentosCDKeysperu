@@ -24,9 +24,9 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
 try:
-    MIN_DISCOUNT_PERCENT = float(os.getenv("MIN_DISCOUNT_PERCENT", "75"))
+    MIN_DISCOUNT_PERCENT = float(os.getenv("MIN_DISCOUNT_PERCENT", "60"))
 except ValueError:
-    MIN_DISCOUNT_PERCENT = 75.0
+    MIN_DISCOUNT_PERCENT = 60.0
 
 try:
     SCAN_INTERVAL_MINUTES = int(os.getenv("SCAN_INTERVAL_MINUTES", "15"))
@@ -44,7 +44,7 @@ if not ENABLED_STORES:
         "plazavea", "oechsle", "metro", "wong", "promart",
         "coolbox", "footloose", "triathlon", "casaideas", "sony",
         "shopstar", "lacuracao", "efe", "hiraoka", "juntoz",
-        "ripley", "falabella"
+        "ripley", "falabella", "knasta"
     ]
 
 # Ruta de base de datos persistente (compatible con Docker / Portainer y Local)
