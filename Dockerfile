@@ -28,3 +28,4 @@ VOLUME ["/app/data"]
 
 # Comando de arranque por defecto: modo demonio continuo
 CMD ["python", "spy.py", "--daemon"]
+

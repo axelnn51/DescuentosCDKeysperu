@@ -13,3 +13,4 @@ services:
     volumes:
       # Persistencia de la base de datos de ofertas vistas
       - ./data:/app/data
+

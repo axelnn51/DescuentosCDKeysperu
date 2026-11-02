@@ -2,13 +2,14 @@
 > Última Actualización: 2026-11-02 | Versión: v1.1.0 | Estado: Operativo & Dockerizado
 
 ## 1. 🚦 Estado Actual Inmediato
-- 17 Tiendas y Marketplaces integrados: Plaza Vea, Metro, Wong, Oechsle, Promart, Coolbox, Footloose, Triathlon, Casaideas, Sony Store, Shopstar, La Curacao, Tiendas Efe, Hiraoka, Juntoz, Ripley y Falabella.
+- 17 Tiendas y Marketplaces integrados y operativos.
 - Token de Telegram del bot `@DsctCDKeysPerubot` configurado (`1234567890:...`).
-- Soporte Dockerfile & docker-compose.yml con volumen persistente en `/app/data` para despliegue directo en Portainer Stacks.
-- Detección automática de chat ID vía `python spy.py --get-chat-id`.
+- Código subido y sincronizado con GitHub en `main` (`https://github.com/axelnn51/DescuentosCDKeysperu.git`).
+- Soporte Dockerfile & docker-compose.yml listo para desplegar en Portainer Stacks sin error de repositorio vacío.
 
 ## 2. 🧠 Base de Conocimiento de Errores (Caminos Resueltos vs Descartados)
 ### ✅ Errores Resueltos Definitivamente (No volver a diagnosticar)
+- **Portainer "remote repository is empty"**: El repositorio en GitHub aún no había recibido el primer push. Resuelto configurando el origen con usuario explícito `axelnn51@github.com` y ejecutando el push a `main`.
 - **VTEX HTTP 206 Partial Content**: Manejado para Shopstar, Plaza Vea, Oechsle, Promart, etc.
 - **Tiendas Magento 2 (La Curacao, Efe, Hiraoka)**: Implementado `MagentoScraper` con parseo de `.product-item-info`, `.old-price` y `.special-price`.
 - **Juntoz (Next.js/Tailwind SPA)**: Implementado `JuntozScraper` extrayendo tarjetas `/p/` y precios `S/. X`.

@@ -128,3 +128,4 @@ class JuntozScraper(BaseScraper):
                 continue
 
         return deals
+

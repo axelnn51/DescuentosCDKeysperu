@@ -122,3 +122,4 @@ class MagentoScraper(BaseScraper):
                 continue
 
         return deals
+
