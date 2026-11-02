@@ -9,6 +9,7 @@
 
 ## 2. 🧠 Base de Conocimiento de Errores (Caminos Resueltos vs Descartados)
 ### ✅ Errores Resueltos Definitivamente (No volver a diagnosticar)
+- **Portainer "env file .env not found"**: Portainer no clona archivos ignorados por git (.env). Solucionado eliminando `env_file: - .env` y pasando variables directas con valores por defecto en `docker-compose.yml`.
 - **Portainer "remote repository is empty"**: El repositorio en GitHub aún no había recibido el primer push. Resuelto configurando el origen con usuario explícito `axelnn51@github.com` y ejecutando el push a `main`.
 - **VTEX HTTP 206 Partial Content**: Manejado para Shopstar, Plaza Vea, Oechsle, Promart, etc.
 - **Tiendas Magento 2 (La Curacao, Efe, Hiraoka)**: Implementado `MagentoScraper` con parseo de `.product-item-info`, `.old-price` y `.special-price`.
