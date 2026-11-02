@@ -18,6 +18,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
+from models import Deal
 from config import (
     TELEGRAM_BOT_TOKEN,
     TELEGRAM_CHAT_ID,
@@ -26,7 +27,7 @@ from config import (
     MAX_ITEMS_PER_STORE,
     ENABLED_STORES
 )
-from db import init_db, should_notify, record_notification, get_stats
+from db import init_db, should_notify, record_notification, get_stats, clean_title_for_dedup
 from scrapers import get_scrapers
 from telegram_notifier import TelegramNotifier
 from filters import is_valid_deal
@@ -53,6 +54,7 @@ def run_scan(min_discount: float, max_items: int, dry_run: bool = False, store_f
     print(f"🎯 Umbral de descuento: >= {min_discount}% | Modo: {'DRY RUN (Solo prueba)' if dry_run else 'EN VIVO'}\n")
 
     candidates = []
+    seen_titles_in_cycle = set()
 
     for scraper in scrapers:
         print(f"🔍 Consultando {scraper.store_name}...", end=" ", flush=True)
@@ -65,16 +67,48 @@ def run_scan(min_discount: float, max_items: int, dry_run: bool = False, store_f
                 if not valid:
                     continue
 
+                clean_title = clean_title_for_dedup(deal.title)
+                if clean_title in seen_titles_in_cycle:
+                    continue
+
                 if should_notify(deal):
+                    seen_titles_in_cycle.add(clean_title)
                     candidates.append(deal)
         except Exception as e:
             print(f"-> Error: {e}")
 
-    # Ordenar candidatos: primero MÍNIMOS HISTÓRICOS, luego mayor ahorro en dinero real
-    candidates.sort(key=lambda d: (1 if d.is_historical_low else 0, d.savings), reverse=True)
+    # Priorización inteligente de ofertas (equilibra porcentaje, dinero ahorrado y mínimos históricos)
+    def deal_priority_score(d: Deal) -> float:
+        score = d.discount_percent * 1.2
+        score += min(d.savings * 0.4, 70.0)
+        if d.is_historical_low or d.deal_type == "historical_low":
+            score += 25.0
+        return score
+
+    candidates.sort(key=deal_priority_score, reverse=True)
 
     print(f"\n📊 Total de ofertas relevantes no notificadas: {len(candidates)}")
-    selected_deals = candidates[:MAX_ALERTS_PER_CYCLE]
+    
+    # Selección balanceada por variedad de tiendas (máximo 3 ofertas por tienda por ciclo para no saturar)
+    selected_deals = []
+    store_counts = {}
+    MAX_PER_STORE_PER_CYCLE = 3
+
+    for deal in candidates:
+        if len(selected_deals) >= MAX_ALERTS_PER_CYCLE:
+            break
+        current_store_count = store_counts.get(deal.store, 0)
+        if current_store_count < MAX_PER_STORE_PER_CYCLE:
+            selected_deals.append(deal)
+            store_counts[deal.store] = current_store_count + 1
+
+    # Si aún sobran espacios para completar los 15, completar con las siguientes mejores ofertas
+    if len(selected_deals) < MAX_ALERTS_PER_CYCLE:
+        for deal in candidates:
+            if len(selected_deals) >= MAX_ALERTS_PER_CYCLE:
+                break
+            if deal not in selected_deals:
+                selected_deals.append(deal)
 
     total_notified = 0
     for deal in selected_deals:
@@ -126,6 +160,7 @@ def main():
     parser.add_argument("--test-telegram", action="store_true", help="Probar el token y chat ID de Telegram")
     parser.add_argument("--get-chat-id", action="store_true", help="Detectar automáticamente tu chat_id desde Telegram")
     parser.add_argument("--stats", action="store_true", help="Mostrar estadísticas de ofertas registradas")
+    parser.add_argument("--reset-db", action="store_true", help="Reiniciar historial de base de datos para reenviar ofertas activas")
     parser.add_argument("--min-discount", type=float, default=MIN_DISCOUNT_PERCENT, help="Porcentaje mínimo de descuento (ej: 75)")
     parser.add_argument("--max-items", type=int, default=MAX_ITEMS_PER_STORE, help="Máximo de productos por tienda")
     parser.add_argument("--interval", type=int, default=SCAN_INTERVAL_MINUTES, help="Intervalo en minutos para modo daemon")
@@ -160,6 +195,16 @@ def main():
         ok, msg = notifier.test_connection()
         print(f"[{'EXITO' if ok else 'ERROR'}] {msg}")
         sys.exit(0 if ok else 1)
+
+    if args.reset_db:
+        import sqlite3
+        from config import DB_PATH
+        conn = sqlite3.connect(DB_PATH)
+        conn.cursor().execute("DELETE FROM notified_deals")
+        conn.commit()
+        conn.close()
+        print("🗑️ Historial de ofertas de la base de datos reiniciado con éxito. El próximo escaneo evaluará todas las ofertas como nuevas.")
+        sys.exit(0)
 
     if args.stats:
         stats = get_stats()

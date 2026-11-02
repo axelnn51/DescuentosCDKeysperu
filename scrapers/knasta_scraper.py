@@ -81,10 +81,15 @@ class KnastaHistoricalScraper(BaseScraper):
                             continue
 
                         discount_calc = round(((last_price - current_price) / last_price) * 100, 1)
+                        savings = last_price - current_price
 
-                        # Si es mínimo histórico, aceptamos caídas a partir de 20%, sino el min_discount
-                        threshold = 20.0 if is_hist_low else min_discount
-                        if discount_calc >= threshold:
+                        # Exigir rebaja contundente según sea mínimo histórico o caída general
+                        is_qualified = (
+                            (is_hist_low and discount_calc >= 25.0 and savings >= 100.0) or
+                            (is_hist_low and discount_calc >= 20.0 and savings >= 200.0) or
+                            (discount_calc >= 40.0 and savings >= 50.0)
+                        )
+                        if is_qualified:
                             img = p.get("image") or p.get("thumbnail_image")
                             pid = f"knasta_{p.get('kid') or hash(url)}"
 
@@ -114,3 +119,4 @@ class KnastaHistoricalScraper(BaseScraper):
                 continue
 
         return deals
+

@@ -5,12 +5,21 @@ from config import DB_PATH
 from models import Deal
 from typing import List, Tuple
 
+COLOR_STOPWORDS = {
+    "negro", "black", "blanco", "white", "gris", "gray", "grey", "rojo", "red",
+    "azul", "blue", "verde", "green", "amarillo", "yellow", "rosado", "pink",
+    "morado", "purple", "marron", "brown", "beige", "dorado", "gold", "plateado", "silver"
+}
+
 def clean_title_for_dedup(title: str) -> str:
-    """Normaliza un título para evitar duplicados entre distintas tiendas del mismo grupo."""
+    """Normaliza un título para evitar duplicados entre tiendas y variaciones de color."""
     text = title.lower()
     text = re.sub(r"[^a-z0-9]+", " ", text)
-    # Palabras irrelevantes
-    tokens = [w for w in text.split() if len(w) > 2 and w not in ("para", "con", "del", "las", "los", "por")]
+    # Palabras irrelevantes y colores para agrupar variantes
+    tokens = [
+        w for w in text.split()
+        if len(w) > 2 and w not in ("para", "con", "del", "las", "los", "por") and w not in COLOR_STOPWORDS
+    ]
     return " ".join(tokens[:8])
 
 def init_db():

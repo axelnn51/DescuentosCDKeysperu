@@ -1,27 +1,30 @@
 # 📍 ACTIVE_CONTEXT: Spy de Rebajas Perú (Telegram Bot + Portainer)
-> Última Actualización: 2026-11-02 | Versión: v1.3.0 | Estado: Operativo, Mínimos Históricos & Fuentes Originales
+> Última Actualización: 2026-11-02 | Versión: v1.4.0 | Estado: Calidad Premium Verificada & Balance Multi-Tienda
 
 ## 1. 🚦 Estado Actual Inmediato
-- 18 Fuentes Oficiales y Directas de Tiendas en Perú (Plaza Vea, Oechsle, Metro, Wong, Promart, Coolbox, Footloose, Triathlon, Casaideas, Sony, Shopstar, La Curacao, Efe, Hiraoka, Juntoz, Ripley, Falabella).
-- Integración del motor de precios históricos de **Knasta Perú** (`scrapers/knasta_scraper.py`): detecta cuándo un producto toca su **Mínimo Histórico Real** en tiendas peruanas.
-- Eliminado completamente cualquier raspado de canales de Telegram de terceros (cero copias, 100% fuentes directas a tiendas oficiales).
-- Filtro inteligente anti-chatarra y detector de precios inflados activo.
-- Cupo ampliado a **15 ofertas TOP por ciclo** con priorización de Mínimos Históricos y mayor ahorro en Soles.
+- 18 Fuentes Oficiales y Directas de Tiendas en Perú + Motor de Mínimos Históricos de Knasta Perú.
+- **Filtro Anti-Precios Falsos**: Eliminados los vendedores de marketplace con precios ficticios inflados (ej: licuadoras o monitores supuestamente rebajados de S/. 16,000 a S/. 1,000). Filtro categórico y ratio máximo 4.5x.
+- **Normalización y Deduplicación Inteligente**: Enriquecido `clean_title_for_dedup` eliminando variantes de color (`COLOR_STOPWORDS`) y deduplicando en memoria durante la recolección.
+- **Distribución Balanceada por Tienda**: Máximo 3 ofertas por tienda por ciclo (15 alertas por ciclo en total) para garantizar variedad entre tecnología, hogar, moda y calzado.
+- **Scoring Ponderado de Ofertas**: Prioriza el dinero real ahorrado en Soles (`savings * 0.4`), el porcentaje de rebaja y el bono de Mínimo Histórico verificado.
+- Cero copias de canales de terceros. Todo original directamente desde tiendas y motores oficiales.
 
 ## 2. 🧠 Base de Conocimiento de Errores (Caminos Resueltos vs Descartados)
 ### ✅ Errores Resueltos Definitivamente (No volver a diagnosticar)
-- **Feeds de terceros descartados**: Eliminado `promo_feed_scraper.py`. Toda la data proviene exclusivamente de tiendas originales y comparadores oficiales de precios peruanos.
-- **Pocas ofertas / Umbral muy rígido**: Ajustado `MIN_DISCOUNT_PERCENT` a 60% por defecto (y caídas del 20-35% si es Mínimo Histórico en tecnología/electro), aumentando a 15 las alertas por ciclo.
-- **Portainer "env file .env not found"**: Resuelto eliminando `env_file` y usando variables directas en `docker-compose.yml`.
+- **Precios inflados de sellers (ej: Oster a S/. 16,990 o ViewSonic a S/. 10,089)**: Resuelto con topes categóricos plausibles en `filters.py` y detección de desproporción.
+- **Duplicados del mismo producto o color**: Resuelto con filtrado de stopwords de color y set de títulos únicos por lote.
+- **Monopolio de una sola tienda en el ciclo**: Resuelto con selector balanceado (máx. 3 alertas por tienda por ciclo).
+- **Mínimos Históricos sin descuento (0% a 2%)**: Knasta ahora exige ahorro real mínimo de S/. 100 y al menos 20-25% de rebaja en tecnología/electro.
 
 ### ❌ Caminos Técnicos Fallidos / Descartados (Prohibido reintentar)
-- **Scrapear canales de Telegram de ofertas**: Descartado por petición expresa del usuario (evitar contenido duplicado/no original).
+- **Scrapear canales de Telegram agregadores**: Descartado por requerimiento de originalidad.
+- **Ordenar únicamente por mayor porcentaje bruto**: Descartado porque premiaba vendedores estafadores con descuentos falsos del 95%.
 
 ## 3. 📋 Tareas Pendientes y Roadmap Inmediato
 - [x] Push a GitHub: `https://github.com/axelnn51/DescuentosCDKeysperu.git`
-- [ ] En Portainer: Hacer clic en "Pull and redeploy".
+- [ ] En Portainer: Hacer clic en "Pull and redeploy" en el Stack `descuentos`.
 
 ## 4. 🔗 Referencias Rápidas y Credenciales/Variables
 - Bot de Telegram: `@DsctCDKeysPerubot`
 - Repositorio: `https://github.com/axelnn51/DescuentosCDKeysperu.git`
-- Motor de Mínimos Históricos: `scrapers/knasta_scraper.py`
+- Umbral general: 50% OFF (o 20-35% en Mínimos Históricos de alta gama con gran ahorro en Soles)
