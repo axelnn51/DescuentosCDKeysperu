@@ -17,6 +17,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
+
 from config import (
     TELEGRAM_BOT_TOKEN,
     TELEGRAM_CHAT_ID,
@@ -28,12 +29,16 @@ from config import (
 from db import init_db, should_notify, record_notification, get_stats
 from scrapers import get_scrapers
 from telegram_notifier import TelegramNotifier
+from filters import is_valid_deal
+
+# Límite de alertas máximas por ciclo para no saturar Telegram ni el servidor
+MAX_ALERTS_PER_CYCLE = 6
 
 def print_banner():
     print(r"""
 =============================================================
   🇵🇪  SPY DE REBAJAS PERÚ - BOT DE LIQUIDACIONES  🇵🇪
-  Filtro actual: Rebajas con MÍNIMO 75% DE DESCUENTO
+  Filtro actual: Rebajas Relevantes con MÍNIMO 75% DE DESCUENTO
 =============================================================
 """)
 
@@ -44,39 +49,53 @@ def run_scan(min_discount: float, max_items: int, dry_run: bool = False, store_f
     stores_to_run = [store_filter.lower()] if store_filter else ENABLED_STORES
     scrapers = get_scrapers(stores_to_run)
 
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando escaneo en {len(scrapers)} tiendas...")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iniciando escaneo en {len(scrapers)} fuentes...")
     print(f"🎯 Umbral de descuento: >= {min_discount}% | Modo: {'DRY RUN (Solo prueba)' if dry_run else 'EN VIVO'}\n")
 
-    total_found = 0
-    total_notified = 0
+    candidates = []
 
     for scraper in scrapers:
-        print(f"🔍 Escaneando {scraper.store_name}...", end=" ", flush=True)
+        print(f"🔍 Consultando {scraper.store_name}...", end=" ", flush=True)
         try:
             deals = scraper.fetch_deals(min_discount=min_discount, max_items=max_items)
-            print(f"-> {len(deals)} ofertas encontradas")
-            total_found += len(deals)
+            print(f"-> {len(deals)} items leídos")
 
             for deal in deals:
-                if should_notify(deal):
-                    print(f"   🔥 [{deal.discount_percent:.0f}% OFF] S/. {deal.discount_price:,.2f} (Antes: S/. {deal.original_price:,.2f})")
-                    print(f"      {deal.title[:65]}")
-                    print(f"      🔗 {deal.url}")
+                valid, reason = is_valid_deal(deal)
+                if not valid:
+                    # Descartado por chatarra o inflado
+                    continue
 
-                    if not dry_run:
-                        sent = notifier.send_deal(deal)
-                        if sent or not notifier.is_configured():
-                            record_notification(deal)
-                            total_notified += 1
-                    else:
-                        total_notified += 1
+                if should_notify(deal):
+                    candidates.append(deal)
         except Exception as e:
             print(f"-> Error: {e}")
 
+    # Ordenar candidatos: primero cupones/promos, y luego los de mayor ahorro real en soles
+    candidates.sort(key=lambda d: (1 if d.deal_type in ("coupon", "2x1") else 0, d.savings), reverse=True)
+
+    print(f"\n📊 Total de ofertas relevantes no notificadas: {len(candidates)}")
+    selected_deals = candidates[:MAX_ALERTS_PER_CYCLE]
+
+    total_notified = 0
+    for deal in selected_deals:
+        tipo = f"[{deal.deal_type.upper()}]" if deal.deal_type != "discount" else f"[{deal.discount_percent:.0f}% OFF]"
+        print(f"   🔥 {tipo} {deal.store} | S/. {deal.discount_price:,.2f} (Antes: S/. {deal.original_price:,.2f})")
+        print(f"      {deal.title[:65]}")
+        print(f"      🔗 {deal.url}")
+
+        if not dry_run:
+            sent = notifier.send_deal(deal)
+            if sent or not notifier.is_configured():
+                record_notification(deal)
+                total_notified += 1
+        else:
+            total_notified += 1
+
     print("\n" + "=" * 60)
-    print(f"🏁 Resumen: {total_found} rebajas >= {min_discount}% detectadas | {total_notified} nuevas alertadas")
+    print(f"🏁 Resumen: {len(candidates)} candidatas | {total_notified} enviadas a Telegram (Límite: {MAX_ALERTS_PER_CYCLE}/ciclo)")
     if not notifier.is_configured() and not dry_run:
-        print("💡 Para recibirlas en Telegram, añade tu TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en el archivo .env")
+        print("💡 Configura TELEGRAM_CHAT_ID para recibir los mensajes en tu chat privado.")
     print("=" * 60 + "\n")
     return total_notified
 
@@ -117,8 +136,6 @@ def main():
         cid, msg = notifier.auto_detect_chat_id()
         print(f"[{'EXITO' if cid else 'INFO'}] {msg}")
         if cid:
-            # Actualizar .env automáticamente
-            env_file = "c:/Users/axeln/OneDrive/Desktop/Proyectos/13. SPY DE REBAJAS/.env"
             try:
                 with open(".env", "r", encoding="utf-8") as f:
                     content = f.read()
@@ -133,7 +150,7 @@ def main():
                         f.write("\n".join(lines) + "\n")
                     print(f"💾 Guardado TELEGRAM_CHAT_ID={cid} en tu archivo .env automáticamente!")
             except Exception as e:
-                print(f"⚠️ Guarda este ID manualmente en tu .env: TELEGRAM_CHAT_ID={cid}")
+                print(f"⚠️ Guarda este ID manualmente: TELEGRAM_CHAT_ID={cid}")
         sys.exit(0 if cid else 1)
 
     if args.test_telegram:

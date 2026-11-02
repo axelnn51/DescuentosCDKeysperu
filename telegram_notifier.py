@@ -18,6 +18,21 @@ class TelegramNotifier:
 
     def format_deal_caption(self, deal: Deal) -> str:
         clean_title = html.escape(deal.title)
+        
+        # Formato especial para promociones tipo 2x1 o Cupones
+        if deal.deal_type in ("2x1", "coupon", "flash"):
+            badge = "🎁 <b>¡PROMOCIÓN ESPECIAL / 2x1!</b> 🎁" if deal.deal_type == "2x1" else "🎟️ <b>¡CUPÓN EN VIVO DETECTADO!</b> 🎟️"
+            caption = (
+                f"{badge}\n\n"
+                f"🏷️ <b>{clean_title}</b>\n\n"
+                f"🏬 <b>Fuente:</b> {deal.store}\n"
+            )
+            if deal.discount_price > 0:
+                caption += f"💰 <b>Precio:</b> <b>S/. {deal.discount_price:,.2f}</b>\n"
+            caption += f"\n👉 <a href=\"{deal.url}\"><b>[ VER PROMOCIÓN / CANJEAR CUPÓN ]</b></a>"
+            return caption
+
+        # Formato para descuentos y liquidaciones directas
         caption = (
             f"🔥 <b>¡ALERTA DE REBAJA: {deal.discount_percent:.0f}% OFF!</b> 🔥\n\n"
             f"🛒 <b>{clean_title}</b>\n\n"
@@ -43,12 +58,12 @@ class TelegramNotifier:
         if deal.image_url:
             success = self._send_photo(deal.image_url, caption)
             if success:
-                time.sleep(1.0) # Rate limiting respetuoso
+                time.sleep(1.2)
                 return True
 
         # 2. Si falla la foto o no tiene imagen, enviar mensaje de texto HTML
         success = self._send_message(caption)
-        time.sleep(1.0)
+        time.sleep(1.2)
         return success
 
     def _send_photo(self, photo_url: str, caption: str) -> bool:
@@ -117,15 +132,15 @@ class TelegramNotifier:
 
     def test_connection(self) -> Tuple[bool, str]:
         if not self.is_configured():
-            return False, "Faltan credenciales: Por favor configura TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en el archivo .env"
+            return False, "Faltan credenciales: Por favor configura TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en las variables de entorno."
         
         test_text = (
             "🤖 <b>SPY DE REBAJAS PERÚ CONECTADO</b> 🇵🇪\n\n"
             "✅ La conexión con tu bot de Telegram es exitosa.\n"
-            "🎯 Monitoreando rebajas con mínimo <b>75% de descuento</b>."
+            "🎯 Monitoreando rebajas con mínimo <b>75% de descuento</b> y cupones/promos activas."
         )
         ok = self._send_message(test_text)
         if ok:
             return True, "Mensaje de prueba enviado exitosamente a Telegram."
         else:
-            return False, "No se pudo enviar el mensaje. Verifica que el bot_token sea correcto y que hayas iniciado chat con el bot."
+            return False, "No se pudo enviar el mensaje. Verifica que hayas iniciado chat con el bot en Telegram."
