@@ -1,30 +1,27 @@
 # 📍 ACTIVE_CONTEXT: Spy de Rebajas Perú (Telegram Bot + Portainer)
-> Última Actualización: 2026-11-02 | Versión: v1.4.0 | Estado: Calidad Premium Verificada & Balance Multi-Tienda
+> Última Actualización: 2026-11-03 | Versión: v1.4.1 | Estado: Seguridad Sanitizada (Cero Secretos) & Portainer Configurado
 
 ## 1. 🚦 Estado Actual Inmediato
-- 18 Fuentes Oficiales y Directas de Tiendas en Perú + Motor de Mínimos Históricos de Knasta Perú.
-- **Filtro Anti-Precios Falsos**: Eliminados los vendedores de marketplace con precios ficticios inflados (ej: licuadoras o monitores supuestamente rebajados de S/. 16,000 a S/. 1,000). Filtro categórico y ratio máximo 4.5x.
-- **Normalización y Deduplicación Inteligente**: Enriquecido `clean_title_for_dedup` eliminando variantes de color (`COLOR_STOPWORDS`) y deduplicando en memoria durante la recolección.
-- **Distribución Balanceada por Tienda**: Máximo 3 ofertas por tienda por ciclo (15 alertas por ciclo en total) para garantizar variedad entre tecnología, hogar, moda y calzado.
-- **Scoring Ponderado de Ofertas**: Prioriza el dinero real ahorrado en Soles (`savings * 0.4`), el porcentaje de rebaja y el bono de Mínimo Histórico verificado.
-- Cero copias de canales de terceros. Todo original directamente desde tiendas y motores oficiales.
+- **Seguridad y Cero Secretos**: Token de Telegram purgado completamente de todo el historial de Git (`git-filter-repo`). Forzado `push origin main --force`. GitGuardian resuelto.
+- **Inyección por Portainer**: `docker-compose.yml` ahora lee `${TELEGRAM_BOT_TOKEN}` y `${TELEGRAM_CHAT_ID}` directo de las *Environment Variables* de Portainer, sin valores por defecto expuestos.
+- **Filtros y Balance Multi-Tienda (v1.4.0)**: Scoring ponderado de dinero real ahorrado, detector de precios inflados por sellers y balance de máximo 3 ofertas por tienda por ciclo (15 por ciclo).
+- `.gitignore` blindado para ignorar cualquier `.env` o credencial.
 
 ## 2. 🧠 Base de Conocimiento de Errores (Caminos Resueltos vs Descartados)
 ### ✅ Errores Resueltos Definitivamente (No volver a diagnosticar)
-- **Precios inflados de sellers (ej: Oster a S/. 16,990 o ViewSonic a S/. 10,089)**: Resuelto con topes categóricos plausibles en `filters.py` y detección de desproporción.
-- **Duplicados del mismo producto o color**: Resuelto con filtrado de stopwords de color y set de títulos únicos por lote.
-- **Monopolio de una sola tienda en el ciclo**: Resuelto con selector balanceado (máx. 3 alertas por tienda por ciclo).
-- **Mínimos Históricos sin descuento (0% a 2%)**: Knasta ahora exige ahorro real mínimo de S/. 100 y al menos 20-25% de rebaja en tecnología/electro.
+- **Fuga de Token en Git / GitGuardian**: Eliminado de todos los commits históricos y del código actual. Sustituido por variables de entorno de Portainer.
+- **Precios inflados de sellers (ej: Oster a S/. 16,990 o ViewSonic a S/. 10,089)**: Resuelto con topes categóricos plausibles en `filters.py`.
+- **Mínimos Históricos insignificantes (0-2%)**: Knasta exige al menos 20-25% y S/. 100 de ahorro real.
 
 ### ❌ Caminos Técnicos Fallidos / Descartados (Prohibido reintentar)
-- **Scrapear canales de Telegram agregadores**: Descartado por requerimiento de originalidad.
-- **Ordenar únicamente por mayor porcentaje bruto**: Descartado porque premiaba vendedores estafadores con descuentos falsos del 95%.
+- **Hardcodear tokens o IDs en compose o README**: Descartado por seguridad. Siempre usar variables en Portainer.
 
 ## 3. 📋 Tareas Pendientes y Roadmap Inmediato
-- [x] Push a GitHub: `https://github.com/axelnn51/DescuentosCDKeysperu.git`
-- [ ] En Portainer: Hacer clic en "Pull and redeploy" en el Stack `descuentos`.
+- [x] Purgar secretos del historial de Git y subir a GitHub con `--force`.
+- [ ] En Telegram: Enviar `/revoke` a `@BotFather` para generar un nuevo token seguro (recomendado por alerta de GitGuardian).
+- [ ] En Portainer: En el Stack `descuentos`, definir las variables de entorno `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` y hacer clic en **"Update the stack"** / **"Pull and redeploy"**.
 
 ## 4. 🔗 Referencias Rápidas y Credenciales/Variables
 - Bot de Telegram: `@DsctCDKeysPerubot`
 - Repositorio: `https://github.com/axelnn51/DescuentosCDKeysperu.git`
-- Umbral general: 50% OFF (o 20-35% en Mínimos Históricos de alta gama con gran ahorro en Soles)
+- Variables en Portainer: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `MIN_DISCOUNT_PERCENT=50`
