@@ -1,7 +1,26 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-deals.db
-data/
-.env
-.venv/
+*.py[cod]
+*$py.class
 
+# C environments
+.venv/
+env/
+venv/
+ENV/
+
+# Database & persistence
+data/
+deals.db
+*.db
+*.sqlite3
+
+# Environment variables & secrets (NUNCA SUBIR A GIT)
+.env
+.env.*
+!.env.example
+
+# Logs & temp
+*.log
+scratch/
+.system_generated/

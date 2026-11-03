@@ -6,9 +6,9 @@ services:
     container_name: spy_rebajas_peru
     restart: unless-stopped
     environment:
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-TU_TELEGRAM_BOT_TOKEN_AQUI}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
-      - MIN_DISCOUNT_PERCENT=${MIN_DISCOUNT_PERCENT:-60}
+      - MIN_DISCOUNT_PERCENT=${MIN_DISCOUNT_PERCENT:-50}
       - SCAN_INTERVAL_MINUTES=${SCAN_INTERVAL_MINUTES:-15}
       - MAX_ITEMS_PER_STORE=${MAX_ITEMS_PER_STORE:-50}
       - ENABLED_STORES=${ENABLED_STORES:-plazavea,oechsle,metro,wong,promart,coolbox,footloose,triathlon,casaideas,sony,shopstar,lacuracao,efe,hiraoka,juntoz,ripley,falabella,knasta}

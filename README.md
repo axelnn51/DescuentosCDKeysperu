@@ -68,10 +68,10 @@ Este proyecto está 100% preparado para desplegarse como un **Stack de Portainer
 3. **Repository URL**: `https://github.com/axelnn51/DescuentosCDKeysperu.git`
 4. **Repository reference**: `refs/heads/main`
 5. **Compose path**: `docker-compose.yml`
-6. En la sección **Environment variables**, define:
-   * `TELEGRAM_BOT_TOKEN`: `TU_TELEGRAM_BOT_TOKEN_AQUI`
-   * `TELEGRAM_CHAT_ID`: `(tu_chat_id)`
-   * `MIN_DISCOUNT_PERCENT`: `75`
+6. En la sección **Environment variables** (Variables de entorno de Portainer), define:
+   * `TELEGRAM_BOT_TOKEN`: `(tu_token_de_botfather_aqui)`
+   * `TELEGRAM_CHAT_ID`: `(tu_chat_id_aqui)`
+   * `MIN_DISCOUNT_PERCENT`: `50`
    * `SCAN_INTERVAL_MINUTES`: `15`
 7. Clic en **Deploy the stack**. ¡Listo! El contenedor correrá en segundo plano vigilando las ofertas 24/7.
 
